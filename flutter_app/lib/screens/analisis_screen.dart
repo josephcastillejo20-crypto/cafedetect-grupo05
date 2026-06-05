@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 class AnalisisScreen extends StatefulWidget {
   const AnalisisScreen({super.key});
@@ -22,10 +23,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
   Map<String, dynamic> _probabilidades = {};
   Color _resultadoColor = Colors.green;
 
-  final ImagePicker _picker = ImagePicker();
-
-  
-  static const String baseUrl = 'http://127.0.0.1:8000/api/auth';
+  static const String baseUrl =
+      'https://cafedetect-grupo05-production.up.railway.app/api/auth';
 
   Color _getColor(String patologia) {
     if (patologia == 'Hoja sana') return Colors.green;
@@ -33,26 +32,27 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
     return Colors.orange;
   }
 
-  Future<void> _seleccionarImagen(ImageSource source) async {
-    try {
-      final XFile? file = await _picker.pickImage(
-        source: source,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
-      );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _imagenBytes = bytes;
-        _imagenSeleccionada = true;
-        _resultadoListo = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al seleccionar imagen: $e')),
-      );
-    }
+  Future<void> _seleccionarImagen() async {
+    final html.FileUploadInputElement input = html.FileUploadInputElement();
+    input.accept = 'image/*';
+    input.click();
+
+    await input.onChange.first;
+
+    if (input.files!.isEmpty) return;
+
+    final file = input.files![0];
+    final reader = html.FileReader();
+    reader.readAsArrayBuffer(file);
+
+    await reader.onLoad.first;
+
+    final bytes = reader.result as Uint8List;
+    setState(() {
+      _imagenBytes = bytes;
+      _imagenSeleccionada = true;
+      _resultadoListo = false;
+    });
   }
 
   Future<void> _analizarImagen() async {
@@ -71,7 +71,7 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
       ));
 
       final response = await request.send().timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 30),
       );
       final body = await response.stream.bytesToString();
       final data = jsonDecode(body);
@@ -88,15 +88,19 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
         });
       } else {
         setState(() => _analizando = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al analizar la imagen')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${data['error'] ?? 'desconocido'}')),
+          );
+        }
       }
     } catch (e) {
       setState(() => _analizando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de conexión: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de conexión: $e')),
+        );
+      }
     }
   }
 
@@ -115,7 +119,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
       backgroundColor: const Color(0xFFF1F8E9),
       appBar: AppBar(
         title: const Text('Analizar Hoja',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style:
+                TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF2E7D32),
         elevation: 0,
         actions: [
@@ -152,16 +157,20 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                   ? Stack(alignment: Alignment.center, children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(17),
-                        child: Image.memory(
-                          _imagenBytes!,
-                          width: double.infinity,
+                       child: Image.memory(
+                           _imagenBytes!,
+                           width: double.infinity,
                           height: double.infinity,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       if (_analizando)
-                        Container(
-                          decoration: BoxDecoration(
+                       Container(
+                        constraints: const BoxConstraints(
+                        minHeight: 220,
+                        maxHeight: 400,
+                        ),
+                      decoration: BoxDecoration(
                             color: Colors.black45,
                             borderRadius: BorderRadius.circular(17),
                           ),
@@ -196,28 +205,14 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Botones selección
-            if (!_imagenSeleccionada) ...[
-              Row(children: [
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.camera_alt_rounded,
-                    label: 'Tomar foto',
-                    color: const Color(0xFF2E7D32),
-                    onTap: () => _seleccionarImagen(ImageSource.camera),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.photo_library_outlined,
-                    label: 'Galería',
-                    color: const Color(0xFF0277BD),
-                    onTap: () => _seleccionarImagen(ImageSource.gallery),
-                  ),
-                ),
-              ]),
-            ],
+            // Botón selección imagen
+            if (!_imagenSeleccionada)
+              _ActionButton(
+                icon: Icons.photo_library_outlined,
+                label: 'Seleccionar imagen',
+                color: const Color(0xFF2E7D32),
+                onTap: _seleccionarImagen,
+              ),
 
             // Botón analizar
             if (_imagenSeleccionada && !_resultadoListo) ...[
@@ -232,9 +227,11 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                           height: 18,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.search),
+                      : const Icon(Icons.biotech),
                   label: Text(
-                      _analizando ? 'Procesando con IA...' : 'ANALIZAR IMAGEN',
+                      _analizando
+                          ? 'Analizando con IA...'
+                          : 'ANALIZAR IMAGEN',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 15)),
                   style: ElevatedButton.styleFrom(
@@ -250,7 +247,6 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
             // RESULTADO
             if (_resultadoListo) ...[
               const SizedBox(height: 16),
-              // Resultado principal
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -263,7 +259,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(Icons.biotech, color: _resultadoColor, size: 22),
+                        Icon(Icons.biotech,
+                            color: _resultadoColor, size: 22),
                         const SizedBox(width: 8),
                         const Text('Resultado del análisis IA',
                             style: TextStyle(
@@ -290,8 +287,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                         child: LinearProgressIndicator(
                           value: _confianza,
                           backgroundColor: Colors.grey.shade200,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(_resultadoColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              _resultadoColor),
                           minHeight: 8,
                         ),
                       ),
@@ -307,7 +304,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.05), blurRadius: 8)
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8)
                   ],
                 ),
                 child: Column(
@@ -320,7 +318,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                       ..._probabilidades.entries.map((e) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                       mainAxisAlignment:
@@ -340,9 +339,11 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                                     borderRadius: BorderRadius.circular(4),
                                     child: LinearProgressIndicator(
                                       value: e.value as double,
-                                      backgroundColor: Colors.grey.shade200,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          _getColor(e.key)),
+                                      backgroundColor:
+                                          Colors.grey.shade200,
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
+                                              _getColor(e.key)),
                                       minHeight: 7,
                                     ),
                                   ),
@@ -374,8 +375,8 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                       ]),
                       const SizedBox(height: 8),
                       Text(_recomendacion,
-                          style:
-                              const TextStyle(fontSize: 13, height: 1.5)),
+                          style: const TextStyle(
+                              fontSize: 13, height: 1.5)),
                     ]),
               ),
               const SizedBox(height: 14),

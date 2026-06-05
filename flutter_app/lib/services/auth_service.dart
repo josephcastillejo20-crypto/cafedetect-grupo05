@@ -5,11 +5,8 @@ import '../models/user_model.dart';
 
 /// Servicio de autenticación — se comunica con el backend Django
 class AuthService {
-  // ⚠️ Cambia esta URL según tu entorno:
-  // - Emulador Android:  http://10.0.2.2:8000/api/auth
-  // - Dispositivo físico: http://<IP-de-tu-PC>:8000/api/auth
-  // - Web (mismo equipo): http://localhost:8000/api/auth
-  static const String baseUrl = 'http://localhost:8000/api/auth';
+
+  static const String baseUrl = 'https://cafedetect-grupo05-production.up.railway.app/api/auth';
 
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'auth_user';
