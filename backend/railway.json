@@ -1,6 +1,6 @@
 {
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "RAILPACK"
   },
   "deploy": {
     "startCommand": "gunicorn auth_backend.wsgi --bind 0.0.0.0:$PORT",
