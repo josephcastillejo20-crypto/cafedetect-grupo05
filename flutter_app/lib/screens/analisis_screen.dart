@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import '../services/auth_service.dart';
 
 class AnalisisScreen extends StatefulWidget {
   const AnalisisScreen({super.key});
@@ -108,7 +109,12 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
     setState(() => _analizando = true);
 
     try {
+      final token = await AuthService().getToken();
       final request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/clasificar/'));
+      // Enviar token para que el análisis se asocie al usuario autenticado
+      if (token != null) {
+        request.headers['Authorization'] = 'Token $token';
+      }
       request.files.add(http.MultipartFile.fromBytes(
         'image', _imagenBytes!, filename: 'hoja.jpg'));
 
