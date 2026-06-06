@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
@@ -23,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _screens = [
-      DashboardTab(user: widget.user, onIrAAnalizar: () => _goToTab(1)),
+      DashboardTab(user: widget.user, onIrAAnalizar: () => _goToTab(1),
+          onIrAEnfermedades: () => _goToTab(3)),
       const AnalisisScreen(),
       const HistorialScreen(),
       const EnfermedadesScreen(),
@@ -58,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
 class DashboardTab extends StatefulWidget {
   final UserModel user;
   final VoidCallback onIrAAnalizar;
-  const DashboardTab({super.key, required this.user, required this.onIrAAnalizar});
+  final VoidCallback onIrAEnfermedades;
+  const DashboardTab({super.key, required this.user, required this.onIrAAnalizar,
+      required this.onIrAEnfermedades});
 
   @override
   State<DashboardTab> createState() => _DashboardTabState();
@@ -73,6 +77,93 @@ class _DashboardTabState extends State<DashboardTab> {
   void initState() {
     super.initState();
     _cargarStats();
+    _mostrarOnboardingSiNecesario();
+  }
+
+  Future<void> _mostrarOnboardingSiNecesario() async {
+    final prefs = await SharedPreferences.getInstance();
+    final yaVisto = prefs.getBool('onboarding_visto') ?? false;
+    if (!yaVisto && mounted) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) _mostrarOnboarding();
+      await prefs.setBool('onboarding_visto', true);
+    }
+  }
+
+  void _mostrarOnboarding() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E7D32).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.eco_rounded, color: Color(0xFF2E7D32), size: 48),
+            ),
+            const SizedBox(height: 16),
+            const Text('¡Bienvenido a CaféDetect!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                    color: Color(0xFF1B5E20))),
+            const SizedBox(height: 8),
+            Text('Tu asistente inteligente para detectar enfermedades en hojas de café.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.5)),
+            const SizedBox(height: 20),
+            ...[
+              (Icons.camera_alt_rounded, const Color(0xFF2E7D32),
+                  'Toma o sube una foto', 'de una hoja de café'),
+              (Icons.biotech, const Color(0xFF1565C0),
+                  'La IA analiza la imagen', 'y detecta la patología'),
+              (Icons.medical_services_outlined, const Color(0xFFF57F17),
+                  'Recibe una recomendación', 'de tratamiento inmediata'),
+            ].map((t) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: t.$2.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(t.$1, color: t.$2, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(t.$3, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(t.$4, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                ]),
+              ]),
+            )),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () { Navigator.pop(context); widget.onIrAAnalizar(); },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32), foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('¡Empezar a analizar!',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Explorar primero',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+            ),
+          ]),
+        ),
+      ),
+    );
   }
 
   Future<void> _cargarStats() async {
@@ -222,11 +313,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold,
                         color: Color(0xFF1B5E20))),
                 TextButton(
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(
-                        'Ve a la pestaña "Enfermedades" para ver el catálogo completo'),
-                        duration: Duration(seconds: 3)),
-                  ),
+                  onPressed: widget.onIrAEnfermedades,
                   child: const Text('Ver catálogo',
                       style: TextStyle(color: Color(0xFF2E7D32), fontSize: 13)),
                 ),
