@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo / Ícono
+                      // Logo / Ícono de la app
                       Container(
                         width: 90,
                         height: 90,
@@ -116,32 +116,33 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
                         child: const Icon(
-                          Icons.lock_outline_rounded,
-                          size: 44,
+                          Icons.eco_rounded,
+                          size: 48,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-                      // Título
+                      // Nombre de la app
                       const Text(
-                        'Bienvenido',
+                        'CaféDetect',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          letterSpacing: 0.5,
+                          letterSpacing: 1.0,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
-                        'Inicia sesión para continuar',
+                        'Detección inteligente de patologías',
                         style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.75),
+                          letterSpacing: 0.3,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 36),
 
                       // Tarjeta del formulario
                       Container(
@@ -162,6 +163,24 @@ class _LoginScreenState extends State<LoginScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              const Text(
+                                'Iniciar sesión',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1B5E20),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Ingresa tus credenciales para continuar',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
                               // Error message
                               if (_errorMessage != null) ...[
                                 Container(
@@ -169,14 +188,12 @@ class _LoginScreenState extends State<LoginScreen>
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: Colors.red.shade200),
+                                    border: Border.all(color: Colors.red.shade200),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(Icons.error_outline,
-                                          color: Colors.red.shade700,
-                                          size: 20),
+                                          color: Colors.red.shade700, size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
@@ -207,8 +224,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: Colors.grey.shade300),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -243,6 +259,9 @@ class _LoginScreenState extends State<LoginScreen>
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
                                     ),
+                                    tooltip: _obscurePassword
+                                        ? 'Mostrar contraseña'
+                                        : 'Ocultar contraseña',
                                     onPressed: () => setState(() {
                                       _obscurePassword = !_obscurePassword;
                                     }),
@@ -252,8 +271,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: Colors.grey.shade300),
+                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -277,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                               // Botón Ingresar
                               SizedBox(
-                                height: 50,
+                                height: 52,
                                 child: ElevatedButton(
                                   onPressed: _isLoading ? null : _handleLogin,
                                   style: ElevatedButton.styleFrom(
@@ -316,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                       const SizedBox(height: 24),
                       Text(
-                        ' ',
+                        'CaféDetect v1.0 — Grupo 05',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.5),
                           fontSize: 12,
