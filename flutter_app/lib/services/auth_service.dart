@@ -14,6 +14,37 @@ class AuthService {
 
   // ─── AUTH ──────────────────────────────────────────────────────────────────
 
+  Future<Map<String, dynamic>> register({
+    required String username,
+    required String password,
+    required String email,
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username':   username,
+          'password':   password,
+          'email':      email,
+          'first_name': firstName,
+          'last_name':  lastName,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        await _saveSession(data['token'], data['user']);
+        return {'success': true, 'user': UserModel.fromJson(data['user'])};
+      }
+      return {'success': false, 'error': data['error'] ?? 'Error al registrar'};
+    } catch (_) {
+      return {'success': false, 'error': 'No se pudo conectar al servidor.'};
+    }
+  }
+
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(

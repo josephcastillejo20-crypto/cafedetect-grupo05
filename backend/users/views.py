@@ -45,6 +45,55 @@ def _predict(img_array):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def register_view(request):
+    """
+    POST /api/auth/register/
+    Body: { "username", "password", "email", "first_name", "last_name" }
+    Retorna: { "token": "...", "user": { ... } }
+    """
+    username   = request.data.get('username', '').strip()
+    password   = request.data.get('password', '')
+    email      = request.data.get('email', '').strip()
+    first_name = request.data.get('first_name', '').strip()
+    last_name  = request.data.get('last_name', '').strip()
+
+    if not username or not password:
+        return Response(
+            {'error': 'El usuario y la contraseña son obligatorios'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if len(password) < 4:
+        return Response(
+            {'error': 'La contraseña debe tener al menos 4 caracteres'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if User.objects.filter(username=username).exists():
+        return Response(
+            {'error': 'Ese nombre de usuario ya está en uso'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if email and User.objects.filter(email=email).exists():
+        return Response(
+            {'error': 'Ese correo electrónico ya está registrado'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = User.objects.create_user(
+        username=username,
+        password=password,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+    )
+    token = Token.objects.create(user=user)
+    return Response(
+        {'token': token.key, 'user': _user_dict(user)},
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     """
     POST /api/auth/login/

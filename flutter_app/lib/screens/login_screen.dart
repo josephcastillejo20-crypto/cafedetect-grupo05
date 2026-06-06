@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -332,7 +333,26 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
+                      // Link a registro
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Text('¿No tienes cuenta? ',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                        GestureDetector(
+                          onTap: () => Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                          child: const Text('Regístrate',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white,
+                              )),
+                        ),
+                      ]),
+                      const SizedBox(height: 12),
                       Text(
                         'CaféDetect v1.0 — Grupo 05',
                         style: TextStyle(
