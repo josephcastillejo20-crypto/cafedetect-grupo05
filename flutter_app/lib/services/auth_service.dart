@@ -165,6 +165,10 @@ class AuthService {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((e) => AnalisisModel.fromJson(e)).toList();
       }
+      if (response.statusCode == 401) {
+        await _clearSession(); // Token inválido — limpiar sesión
+        return [];
+      }
     } catch (_) {}
     return [];
   }
@@ -187,8 +191,29 @@ class AuthService {
           'enfermos': data['enfermos'] as int,
         };
       }
+      if (response.statusCode == 401) await _clearSession();
     } catch (_) {}
     return {'total': 0, 'sanos': 0, 'enfermos': 0};
+  }
+
+  /// Verifica si el token guardado sigue siendo válido en el servidor.
+  /// Retorna false si el token expiró o fue invalidado (ej: Railway redesplegó).
+  Future<bool> verificarSesion() async {
+    final token = await getToken();
+    if (token == null) return false;
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile/'),
+        headers: {'Authorization': 'Token $token'},
+      ).timeout(const Duration(seconds: 6));
+      if (response.statusCode == 401) {
+        await _clearSession();
+        return false;
+      }
+      return response.statusCode == 200;
+    } catch (_) {
+      return true; // Sin conexión — no cerrar sesión por error de red
+    }
   }
 
   // ─── SESIÓN LOCAL ──────────────────────────────────────────────────────────

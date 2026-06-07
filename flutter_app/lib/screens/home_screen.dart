@@ -19,12 +19,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   late final List<Widget> _screens;
+  final _dashboardKey = GlobalKey<_DashboardTabState>();
 
   @override
   void initState() {
     super.initState();
     _screens = [
-      DashboardTab(user: widget.user, onIrAAnalizar: () => _goToTab(1),
+      DashboardTab(key: _dashboardKey, user: widget.user,
+          onIrAAnalizar: () => _goToTab(1),
           onIrAEnfermedades: () => _goToTab(3)),
       const AnalisisScreen(),
       const HistorialScreen(),
@@ -33,7 +35,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  void _goToTab(int i) => setState(() => _selectedIndex = i);
+  void _goToTab(int i) {
+    setState(() => _selectedIndex = i);
+    // Refrescar stats cada vez que el usuario vuelve al dashboard
+    if (i == 0) _dashboardKey.currentState?.refrescar();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(icon: Icon(Icons.home_outlined),      selectedIcon: Icon(Icons.home,          color: Color(0xFF2E7D32)), label: 'Inicio'),
           NavigationDestination(icon: Icon(Icons.camera_alt_outlined), selectedIcon: Icon(Icons.camera_alt,    color: Color(0xFF2E7D32)), label: 'Analizar'),
           NavigationDestination(icon: Icon(Icons.history_outlined),    selectedIcon: Icon(Icons.history,       color: Color(0xFF2E7D32)), label: 'Historial'),
-          NavigationDestination(icon: Icon(Icons.local_florist_outlined), selectedIcon: Icon(Icons.local_florist, color: Color(0xFF2E7D32)), label: 'Enfermedades'),
+          NavigationDestination(icon: Icon(Icons.local_florist_outlined), selectedIcon: Icon(Icons.local_florist, color: Color(0xFF2E7D32)), label: 'Catálogo'),
           NavigationDestination(icon: Icon(Icons.person_outline),      selectedIcon: Icon(Icons.person,        color: Color(0xFF2E7D32)), label: 'Perfil'),
         ],
       ),
@@ -165,6 +171,9 @@ class _DashboardTabState extends State<DashboardTab> {
       ),
     );
   }
+
+  /// Llamado desde HomeScreen cada vez que se vuelve al tab Inicio
+  void refrescar() => _cargarStats();
 
   Future<void> _cargarStats() async {
     final stats = await _service.getStats();
