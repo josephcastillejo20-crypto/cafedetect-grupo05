@@ -5,3 +5,5 @@ tensorflow-cpu
 pillow
 numpy
 gunicorn
+psycopg2-binary
+dj-database-url
