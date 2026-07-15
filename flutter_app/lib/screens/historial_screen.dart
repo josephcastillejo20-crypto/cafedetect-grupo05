@@ -266,8 +266,16 @@ class _HistorialScreenState extends State<HistorialScreen> {
                             color: item.color.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(item.estado,
-                              style: TextStyle(fontSize: 11, color: item.color, fontWeight: FontWeight.bold)),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(
+                              item.esSano ? Icons.check_circle_outline : Icons.warning_amber_rounded,
+                              size: 12,
+                              color: item.color,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(item.estado,
+                                style: TextStyle(fontSize: 11, color: item.color, fontWeight: FontWeight.bold)),
+                          ]),
                         ),
                         const SizedBox(width: 8),
                         Text('Confianza: ${item.confianza.toStringAsFixed(1)}%',

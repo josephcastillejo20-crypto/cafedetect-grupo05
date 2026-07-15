@@ -459,11 +459,21 @@ class _AnalisisScreenState extends State<AnalisisScreen> {
                         color: _resultadoColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        _resultadoColor == Colors.green ? 'SANA' : 'DETECTADA',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold,
-                            color: _resultadoColor),
-                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(
+                          _resultadoColor == Colors.green
+                              ? Icons.check_circle_outline
+                              : Icons.warning_amber_rounded,
+                          size: 13,
+                          color: _resultadoColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _resultadoColor == Colors.green ? 'SANA' : 'DETECTADA',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold,
+                              color: _resultadoColor),
+                        ),
+                      ]),
                     ),
                   ]),
                   const SizedBox(height: 8),
