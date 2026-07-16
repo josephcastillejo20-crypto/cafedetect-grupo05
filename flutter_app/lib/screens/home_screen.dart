@@ -100,76 +100,10 @@ class _DashboardTabState extends State<DashboardTab> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.eco_rounded, color: Color(0xFF2E7D32), size: 48),
-            ),
-            const SizedBox(height: 16),
-            const Text('¡Bienvenido a CaféDetect!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B5E20))),
-            const SizedBox(height: 8),
-            Text('Tu asistente inteligente para detectar enfermedades en hojas de café.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.5)),
-            const SizedBox(height: 20),
-            ...[
-              (Icons.camera_alt_rounded, const Color(0xFF2E7D32),
-                  'Toma o sube una foto', 'de una hoja de café'),
-              (Icons.biotech, const Color(0xFF1565C0),
-                  'La IA analiza la imagen', 'y detecta la patología'),
-              (Icons.medical_services_outlined, const Color(0xFFF57F17),
-                  'Recibe una recomendación', 'de tratamiento inmediata'),
-            ].map((t) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: t.$2.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                  child: Icon(t.$1, color: t.$2, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(t.$3, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text(t.$4, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                ]),
-              ]),
-            )),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () { Navigator.pop(context); widget.onIrAAnalizar(); },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32), foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('¡Empezar a analizar!',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Explorar primero',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-            ),
-          ]),
-        ),
-      ),
-    );
+      builder: (_) => const _OnboardingDialog(),
+    ).then((_) {
+      // Al cerrar el tutorial, ir a analizar
+    });
   }
 
   /// Llamado desde HomeScreen cada vez que se vuelve al tab Inicio
@@ -417,4 +351,163 @@ class _PathologyCard extends StatelessWidget {
       ]),
     );
   }
+}
+
+// ── Tutorial de bienvenida (4 pasos) ─────────────────────────────────────────
+class _OnboardingDialog extends StatefulWidget {
+  const _OnboardingDialog();
+  @override
+  State<_OnboardingDialog> createState() => _OnboardingDialogState();
+}
+
+class _OnboardingDialogState extends State<_OnboardingDialog> {
+  int _paso = 0;
+
+  static const _pasos = [
+    _OnboardingStep(
+      icono: Icons.eco_rounded,
+      color: Color(0xFF2E7D32),
+      titulo: '¡Bienvenido a CaféDetect!',
+      descripcion: 'Tu asistente inteligente para detectar enfermedades en hojas de café. En 4 pasos te mostramos cómo funciona.',
+      detalle: 'Diseñado para agricultores cafetaleros del Perú.',
+    ),
+    _OnboardingStep(
+      icono: Icons.camera_alt_rounded,
+      color: Color(0xFF1565C0),
+      titulo: 'Paso 1 — Captura una hoja',
+      descripcion: 'Toca "Analizar" en el menú inferior. Puedes tomar una foto con la cámara de tu celular o subir una imagen de tu galería.',
+      detalle: 'Consejo: asegúrate de que la hoja esté bien iluminada y sin sombras.',
+    ),
+    _OnboardingStep(
+      icono: Icons.biotech,
+      color: Color(0xFF6A1B9A),
+      titulo: 'Paso 2 — La IA analiza',
+      descripcion: 'Nuestra inteligencia artificial analiza la imagen en segundos e identifica si la hoja tiene alguna de las 4 patologías conocidas.',
+      detalle: 'Enfermedades detectables: Roya, Cercosporiosis, Minador de hojas, Phoma.',
+    ),
+    _OnboardingStep(
+      icono: Icons.medical_services_outlined,
+      color: Color(0xFFF57F17),
+      titulo: 'Paso 3 — Recibe tratamiento',
+      descripcion: 'Obtendrás un diagnóstico con el nivel de confianza y una recomendación de tratamiento específica para la enfermedad detectada.',
+      detalle: 'Todos tus análisis se guardan en el Historial para que puedas consultarlos después.',
+    ),
+  ];
+
+  void _siguiente() {
+    if (_paso < _pasos.length - 1) {
+      setState(() => _paso++);
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  void _saltar() => Navigator.pop(context);
+
+  @override
+  Widget build(BuildContext context) {
+    final paso = _pasos[_paso];
+    final esUltimo = _paso == _pasos.length - 1;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Indicador de pasos
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(
+            _pasos.length,
+            (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: i == _paso ? 24 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: i == _paso ? paso.color : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          )),
+          const SizedBox(height: 24),
+
+          // Ícono
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Container(
+              key: ValueKey(_paso),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: paso.color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(paso.icono, color: paso.color, size: 52),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Título
+          Text(paso.titulo,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: paso.color)),
+          const SizedBox(height: 12),
+
+          // Descripción
+          Text(paso.descripcion,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.5)),
+          const SizedBox(height: 10),
+
+          // Detalle
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: paso.color.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(paso.detalle,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: paso.color, fontStyle: FontStyle.italic)),
+          ),
+          const SizedBox(height: 24),
+
+          // Botón siguiente / finalizar
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _siguiente,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: paso.color,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                esUltimo ? '¡Empezar a analizar!' : 'Siguiente →',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Saltar
+          if (!esUltimo)
+            TextButton(
+              onPressed: _saltar,
+              child: Text('Saltar tutorial',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _OnboardingStep {
+  final IconData icono;
+  final Color color;
+  final String titulo, descripcion, detalle;
+  const _OnboardingStep({
+    required this.icono, required this.color,
+    required this.titulo, required this.descripcion, required this.detalle,
+  });
 }
